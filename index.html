@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Kassim EHR Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 300;
+        }
+
+        .header .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem 0;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+        }
+
+        .btn-success {
+            background: #48bb78;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-online {
+            background: #48bb78;
+        }
+
+        .status-offline {
+            background: #f56565;
+        }
+
+        .patient-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .patient-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+
+        .patient-item:hover {
+            background: #f7fafc;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #718096;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🏥 Dr. Kassim EHR Dashboard</h1>
+        <p class="subtitle">Electronic Health Record Management System</p>
+    </header>
+
+    <div class="container">
+        <!-- Status Bar -->
+        <div class="card">
+            <h2><span class="status-indicator" id="status-indicator"></span>System Status</h2>
+            <p id="status-text">Connecting to API...</p>
+            <button class="btn" onclick="checkAPIStatus()">Check Connection</button>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="patient-count">0</div>
+                <div class="stat-label">Total Patients</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="appointment-count">0</div>
+                <div class="stat-label">Today's Appointments</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="prescription-count">0</div>
+                <div class="stat-label">Active Prescriptions</div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Patient Management -->
+            <div class="card">
+                <h2>👥 Patient Management</h2>
+                <button class="btn btn-success" onclick="showAddPatientModal()">Add New Patient</button>
+                <button class="btn" onclick="loadPatients()">View All Patients</button>
+                <div id="patient-list" class="patient-list">
+                    <div class="loading">Loading patients...</div>
+                </div>
+            </div>
+
+            <!-- Appointment Booking -->
+            <div class="card">
+                <h2>📅 Appointment Booking</h2>
+                <button class="btn btn-success" onclick="showBookAppointmentModal()">Book Appointment</button>
+                <button class="btn" onclick="loadAppointments()">View Appointments</button>
+                <div id="appointment-list">
+                    <div class="loading">Loading appointments...</div>
+                </div>
+            </div>
+
+            <!-- Medical Records -->
+            <div class="card">
+                <h2>📋 Medical Records</h2>
+                <button class="btn" onclick="showMedicalRecordsModal()">View Records</button>
+                <button class="btn" onclick="showAddRecordModal()">Add Record</button>
+                <div id="records-list">
+                    <div class="loading">Loading medical records...</div>
+                </div>
+            </div>
+
+            <!-- Prescription Management -->
+            <div class="card">
+                <h2>💊 Prescription Management</h2>
+                <button class="btn btn-success" onclick="showAddPrescriptionModal()">New Prescription</button>
+                <button class="btn" onclick="loadPrescriptions()">View Prescriptions</button>
+                <div id="prescription-list">
+                    <div class="loading">Loading prescriptions...</div>
+                </div>
+            </div>
+
+            <!-- AI Recommendations -->
+            <div class="card">
+                <h2>🤖 AI Doctor Recommendations</h2>
+                <button class="btn" onclick="showAIRecommendationsModal()">Get AI Recommendations</button>
+                <div id="ai-recommendations">
+                    <div class="loading">AI recommendations will appear here...</div>
+                </div>
+            </div>
+
+            <!-- System Health -->
+            <div class="card">
+                <h2>⚡ System Health</h2>
+                <p>API Status: <span id="api-status">Checking...</span></p>
+                <p>Last Updated: <span id="last-updated">Never</span></p>
+                <button class="btn" onclick="refreshDashboard()">Refresh Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="addPatientModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addPatientModal')">&times;</span>
+            <h2>Add New Patient</h2>
+            <form id="addPatientForm" onsubmit="addPatient(event)">
+                <div class="form-group">
+                    <label for="patientName">Full Name</label>
+                    <input type="text" id="patientName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="patientEmail">Email</label>
+                    <input type="email" id="patientEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="patientPhone">Phone</label>
+                    <input type="tel" id="patientPhone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="patientDOB">Date of Birth</label>
+                    <input type="date" id="patientDOB" name="dob" required>
+                </div>
+                <div class="form-group">
+                    <label for="patientAddress">Address</label>
+                    <textarea id="patientAddress" name="address" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Add Patient</button>
+                <button type="button" class="btn" onclick="closeModal('addPatientModal')">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Patient List Modal -->
+    <div id="patientListModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('patientListModal')">&times;</span>
+            <h2>All Patients</h2>
+            <div id="all-patients-list">
+                <div class="loading">Loading patients...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app-enhanced.js"></script>
+</body>
+</html>
